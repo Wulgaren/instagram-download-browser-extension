@@ -1,5 +1,5 @@
 import { argv } from 'node:process';
-import { cp, readFile, writeFile, rm } from 'node:fs/promises';
+import { cp, readFile, writeFile, rm, rename } from 'node:fs/promises';
 
 import pkg from './package.json' with { type: 'json' };
 import * as esbuild from 'esbuild';
@@ -19,6 +19,9 @@ if (platform === 'chrome') {
 if (platform === 'firefox') {
    entryPoints.push('src/background/firefox.ts');
 }
+if (platform === 'safari') {
+   entryPoints.push('src/background/safari.ts', 'src/xhr.safari.ts', 'src/inject.safari.ts');
+}
 
 const ctx = await esbuild.context({
    entryPoints,
@@ -36,6 +39,14 @@ const ctx = await esbuild.context({
                const contents = await readFile(`./src/manifest.${platform}.json`, { encoding: 'utf8' });
                const replacedContents = contents.replace(/__MSG_extVersion__/g, pkg.version);
                await writeFile(`dist/${platform}/manifest.json`, replacedContents, { encoding: 'utf8' });
+
+               if (platform === 'safari') {
+                  try {
+                     await rename(`dist/${platform}/xhr.safari.js`, `dist/${platform}/xhr.js`);
+                     await rename(`dist/${platform}/inject.safari.js`, `dist/${platform}/inject.js`);
+                  } catch {}
+               }
+
                console.log(`[${Date()}] manifest copied and replaced successfully`);
             });
          },

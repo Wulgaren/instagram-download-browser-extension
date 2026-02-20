@@ -157,6 +157,10 @@ async function handleZipChrome(articleNode: HTMLElement) {
 }
 
 
+function isSafari(): boolean {
+   return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+}
+
 export function handleZipDownload(articleNode: HTMLElement) {
-    return typeof browser !== 'undefined' ? handleZipFirefox(articleNode) : handleZipChrome(articleNode);
+    return typeof browser !== 'undefined' && !isSafari() ? handleZipFirefox(articleNode) : handleZipChrome(articleNode);
 }
